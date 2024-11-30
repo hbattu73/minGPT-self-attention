@@ -174,8 +174,37 @@ class CharCorruptionDataset(Dataset):
 
         ### TODO:
         ### [part e]: see spec above
-
         ### START CODE HERE
+        # 0. Retrieve the document 
+        document = self.data[idx]
+        # 1. Randomly truncate the document
+        document = document[:random.randint(4, self.max_context_size)]
+        # 2. Break the (truncated) document into three substrings
+        ## Length of masked content should be random and on avg., 25% of truncated document
+        target_masked_len = int(len(document) * self.masking_percent)
+        variance = max(1, int(target_masked_len * self.masking_percent))
+        masked_len = random.randint(
+            max(1, target_masked_len - variance), 
+            min(len(document) - 2, target_masked_len + variance)
+        )
+        ## Choose random start index for masked content
+        masked_idx = random.randint(1, len(document) - masked_len - 1)
+        ## Break document into prefix, masked_content, suffix
+        prefix = document[:masked_idx]
+        masked_content = document[masked_idx:masked_idx + masked_len]
+        suffix = document[masked_idx + masked_len:]
+        # 3. Rearrange the substrings
+        ## Add masking characters
+        masked_string = prefix + self.MASK_CHAR + suffix + self.MASK_CHAR + masked_content + self.MASK_CHAR
+        ## Pad to block size
+        pad_len = self.block_size - len(masked_string)
+        masked_string += self.PAD_CHAR * pad_len
+        # 4. Create input and output sequences
+        x,y = masked_string[:-1], masked_string[1:]
+        # 5. Encode as long tensors
+        x = torch.tensor([self.stoi[c] for c in x], dtype=torch.long)
+        y = torch.tensor([self.stoi[c] for c in y], dtype=torch.long)
+        return x, y
         ### END CODE HERE
 
         raise NotImplementedError

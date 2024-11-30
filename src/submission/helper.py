@@ -12,6 +12,7 @@ def initialize_vanilla_model(mconf):
     ### [part c]: Make some model here
 
     ### START CODE HERE
+    attention_model = GPT(mconf)
     ### END CODE HERE
     return attention_model
 
@@ -60,6 +61,27 @@ def finetune(reading_params_path, finetune_corpus_path, pretrain_dataset, block_
     trainer_obj = None #Trainer object (see trainer.py for more details)
     tconf = None #TrainerConfig object (see trainer.py for more details)
     ### START CODE HERE
+
+    # 1. If reading_params_path is specified, load these parameters
+    if reading_params_path is not None:
+        pretrained_model = torch.load(reading_params_path, map_location=torch.device('cpu'), weights_only=True)
+        model.load_state_dict(pretrained_model)
+
+    # 2. Finetune the model on this corpus
+    tconf = TrainerConfig(
+        max_epochs=10 if reading_params_path is not None else 75,
+        batch_size=256,
+        learning_rate=finetune_lr,
+        lr_decay=True,
+        warmup_tokens=512*20,
+        final_tokens=200*len(pretrain_dataset)*block_size,
+        num_workers=0
+    )
+    # print("Max Epochs: {}".format(tconf.max_epochs))   
+    corpus = open(finetune_corpus_path, 'r').read()
+    dataset = NameDataset(corpus, pretrain_dataset)
+    trainer_obj = Trainer(model, dataset, None, tconf)
+
     ### END CODE HERE
     return tconf, trainer_obj
 
@@ -96,5 +118,7 @@ def train(model, writing_params_path, trainer_obj):
     ### Note: trainer_obj is of type Trainer (see trainer.py for more details)
 
     ### START CODE HERE
+    trainer_obj.train()
+    torch.save(model.state_dict(), writing_params_path)
     ### END CODE HERE
     return
