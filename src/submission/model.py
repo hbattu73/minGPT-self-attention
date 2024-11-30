@@ -111,7 +111,7 @@ class DownProjectBlock(nn.Module):
         ### Should be around 3-5 lines.
 
         ### START CODE HERE
-        x = x_input + self.attn(self.ln1(x), self.ln1(self.C))
+        x = x_input + self.attn(self.ln1(x_input), self.ln1(self.C))
         x = x + self.mlp(self.ln2(x))
         return x
         ### END CODE HERE
