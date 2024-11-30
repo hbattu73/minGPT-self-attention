@@ -116,7 +116,7 @@ def pretrain(pretrain_dataset, block_size, model, pretrain_lr=6e-3, writer=None)
         num_workers=0
     )
     trainer_obj = Trainer(model, pretrain_dataset, None, tconf)
-    trainer_obj.train()
+    # trainer_obj.train()
     ### END CODE HERE
     return tconf, trainer_obj
 
